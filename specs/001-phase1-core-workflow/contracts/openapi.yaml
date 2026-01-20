@@ -1,0 +1,213 @@
+openapi: 3.0.3
+info:
+  title: GigIt Phase 1 Core Workflow API
+  version: 0.1.0
+servers:
+  - url: /api
+security:
+  - bearerAuth: []
+
+paths:
+  /jobs:
+    get:
+      summary: List Jobs visible to the current user
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+          description: Search by job name or reference
+        - in: query
+          name: status
+          schema: { type: string, enum: [Draft, Active, Archived] }
+      responses:
+        '200':
+          description: Jobs list
+    post:
+      summary: Create a Job (Admin/PM)
+      responses:
+        '201':
+          description: Job created
+
+  /jobs/{jobId}:
+    get:
+      summary: Get Job details
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Job details }
+    patch:
+      summary: Update Job details (Admin/PM)
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Job updated }
+
+  /jobs/{jobId}/assignments:
+    get:
+      summary: List crew assignments for a Job
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Assignments list }
+    post:
+      summary: Add a crew assignment (Admin/PM)
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+      responses:
+        '201': { description: Assignment created }
+
+  /jobs/{jobId}/assignments/{assignmentId}:
+    patch:
+      summary: Update a crew assignment role/notes (Admin/PM)
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: assignmentId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Assignment updated }
+    delete:
+      summary: Remove a crew assignment (Admin/PM)
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: assignmentId
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Assignment removed }
+
+  /jobs/{jobId}/files:
+    get:
+      summary: List Job files
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: area
+          schema: { type: string, enum: [Shared, Internal] }
+        - in: query
+          name: category
+          schema: { type: string }
+      responses:
+        '200': { description: File list }
+
+  /jobs/{jobId}/files/initiate-upload:
+    post:
+      summary: Initiate a Job file upload and receive a signed upload URL (Admin/PM/Senior Tech)
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Upload initiated }
+
+  /jobs/{jobId}/files/{fileId}/download-url:
+    get:
+      summary: Get a signed download URL for a Job file
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: fileId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Signed download URL }
+
+  /jobs/{jobId}/files/{fileId}:
+    delete:
+      summary: Delete a Job file (Admin/PM)
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: fileId
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Deleted }
+
+  /jobs/{jobId}/notes:
+    get:
+      summary: Get Job notes
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Notes }
+    patch:
+      summary: Update Job notes (Admin/PM/Senior Tech)
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Notes updated }
+
+  /jobs/{jobId}/paperwork/plugup:
+    get:
+      summary: Get plug-up sheet (metadata + rows)
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Plug-up sheet }
+    patch:
+      summary: Update plug-up sheet rows (Admin/PM/Senior Tech)
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Plug-up sheet updated }
+
+  /jobs/{jobId}/paperwork/plugup/export-pdf:
+    post:
+      summary: Create a plug-up sheet PDF export (any user with Job access)
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+      responses:
+        '202': { description: Export requested }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

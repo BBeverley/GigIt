@@ -1,0 +1,27 @@
+## Node.js / TypeScript
+node_modules/
+dist/
+build/
+coverage/
+*.log
+
+## Environment files (never commit secrets)
+.env
+.env.*
+!.env.example
+
+## Tooling caches
+.eslintcache
+.vite/
+
+## IDE/editor
+.vscode/
+.idea/
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Temp
+*.tmp
+*.swp

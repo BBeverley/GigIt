@@ -90,6 +90,15 @@
 - **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
 - **FR-005**: System MUST [behavior, e.g., "log all security events"]
 
+*GigIt constitution prompts (include as applicable):*
+
+- For any new entity/data: specify the Job (Project) scope and access rules.
+- For any endpoint/mutation: specify API-level permission checks (no UI-only auth).
+- For any API contract: specify request/response validation (e.g., Zod).
+- For any DB change: specify required migrations.
+- For any file feature: specify object storage + signed URL access.
+- For any export: specify backend/worker generation + reproducibility.
+
 *Example of marking unclear requirements:*
 
 - **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]

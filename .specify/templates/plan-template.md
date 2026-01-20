@@ -3,7 +3,7 @@
 **Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
-**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
+**Note**: This template is filled in by the `/speckit.plan` command.
 
 ## Summary
 
@@ -31,7 +31,19 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Use the constitution at `.specify/memory/constitution.md` as the source of truth.
+
+### Required gates (GigIt)
+
+- Job scope: all new operational data is scoped to a Job (Project)
+- Authorization: permissions are enforced at the API (never UI-only)
+- Identity vs business logic: Cognito is identity only; DB is business truth
+- Validation: API requests/responses are validated (e.g., Zod)
+- Migrations: DB changes include migrations; no manual production edits
+- Files: uploads stored in object storage; browser uses signed URLs only
+- Exports: PDF/export generation is backend/worker owned (not browser)
+- Security: JWT verification and admin gating on every request
+- Offline-ish UX: the feature fails gracefully under poor connectivity
 
 ## Project Structure
 
