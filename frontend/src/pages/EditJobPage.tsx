@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { apiFetch } from '../api/client';
 import { JobForm, type JobFormValues } from '../components/jobs/JobForm';
+import { PageHeader } from '@/components/ui-patterns/PageHeader';
+import { TableSkeleton } from '@/components/ui-patterns/LoadingSkeletons';
 
 type Job = JobFormValues & { jobId: string };
 
@@ -42,12 +44,17 @@ export function EditJobPage() {
   }, [jobId]);
 
   if (!jobId) return <p>Missing jobId</p>;
-  if (error) return <pre style={{ color: 'crimson' }}>{error}</pre>;
-  if (!job) return <p>Loading…</p>;
+  if (error)
+    return (
+      <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+        {error}
+      </div>
+    );
+  if (!job) return <TableSkeleton rows={5} />;
 
   return (
-    <div>
-      <h2>Edit Job</h2>
+    <div className="space-y-6">
+      <PageHeader title="Edit Job" subtitle={`Update details for ${job.reference}.`} />
       <JobForm
         initial={job}
         disableReference

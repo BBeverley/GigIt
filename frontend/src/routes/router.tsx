@@ -11,30 +11,12 @@ import { NotesTab } from '../pages/JobWorkspace/NotesTab';
 import { OverviewTab } from '../pages/JobWorkspace/OverviewTab';
 import { MyJobsPage } from '../pages/MyJobsPage';
 import { ProfilePage } from '../pages/ProfilePage';
+import { SignInPage } from '../pages/SignInPage';
 
 function requireToken() {
   const token = window.localStorage.getItem('token');
   if (!token) return <Navigate to="/signin" replace />;
   return <AppShell />;
-}
-
-function SignInPage() {
-  return (
-    <div style={{ padding: 24 }}>
-      <h1>Sign in (placeholder)</h1>
-      <p>
-        Paste a JWT into localStorage under <code>token</code>.
-      </p>
-      <button
-        onClick={() => {
-          window.localStorage.setItem('token', 'dev-token-placeholder');
-          window.location.href = '/';
-        }}
-      >
-        Set placeholder token and continue
-      </button>
-    </div>
-  );
 }
 
 export const router = createBrowserRouter([

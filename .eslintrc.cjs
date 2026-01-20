@@ -30,6 +30,15 @@ module.exports = {
   ignorePatterns: ['**/dist/**', '**/build/**', '**/coverage/**', '**/node_modules/**'],
   rules: {
     'react/react-in-jsx-scope': 'off'
-  }
+  },
+  overrides: [
+    {
+      files: ['**/*.ts', '**/*.tsx'],
+      rules: {
+        // TypeScript already provides type-checking for props.
+        'react/prop-types': 'off',
+      },
+    },
+  ],
 };
 

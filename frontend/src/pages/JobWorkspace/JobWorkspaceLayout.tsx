@@ -4,6 +4,12 @@ import { NavLink, Outlet, useParams } from 'react-router-dom';
 import { apiFetch } from '../../api/client';
 import { ActivityLog } from '../../components/audit/ActivityLog';
 
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageHeader } from '@/components/ui-patterns/PageHeader';
+import { SectionCard } from '@/components/ui-patterns/SectionCard';
+import { PencilLine } from 'lucide-react';
+
 type Job = {
   jobId: string;
   reference: string;
@@ -39,54 +45,73 @@ export function JobWorkspaceLayout() {
   if (!jobId) return <p>Missing jobId</p>;
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline' }}>
-        <div>
-          <h2 style={{ marginBottom: 4 }}>Job Workspace</h2>
-          {job ? (
-            <div style={{ color: '#555' }}>
-              <strong>{job.reference}</strong> — {job.name}
+    <div className="space-y-6">
+      <PageHeader
+        title="Job Workspace"
+        subtitle={job ? `${job.reference} • ${job.name}` : 'Loading job context…'}
+        actions={
+          <Button asChild variant="secondary">
+            <NavLink to={`/jobs/${jobId}/edit`}>
+              <PencilLine className="mr-2 h-4 w-4" />
+              Edit
+            </NavLink>
+          </Button>
+        }
+      />
+
+      <SectionCard
+        className="p-0"
+        contentClassName="p-0"
+        title={undefined}
+        description={undefined}
+      >
+        <div className="border-b px-2 py-2">
+          <Tabs value={tabValueFromPath(window.location.pathname, jobId)}>
+            <TabsList className="w-full justify-start overflow-x-auto">
+              <TabsTrigger value="overview" asChild>
+                <NavLink to={`/jobs/${jobId}`} end>
+                  Overview
+                </NavLink>
+              </TabsTrigger>
+              <TabsTrigger value="crew" asChild>
+                <NavLink to={`/jobs/${jobId}/crew`}>Crew</NavLink>
+              </TabsTrigger>
+              <TabsTrigger value="files" asChild>
+                <NavLink to={`/jobs/${jobId}/files`}>Files</NavLink>
+              </TabsTrigger>
+              <TabsTrigger value="notes" asChild>
+                <NavLink to={`/jobs/${jobId}/notes`}>Notes</NavLink>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        {error ? (
+          <div className="p-6">
+            <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+              {error}
             </div>
-          ) : null}
+          </div>
+        ) : null}
+
+        <div className="p-6">
+          <Outlet />
         </div>
-        <div>
-          <NavLink to={`/jobs/${jobId}/edit`}>Edit</NavLink>
-        </div>
-      </div>
+      </SectionCard>
 
-      <div style={{ display: 'flex', gap: 12, marginTop: 12, borderBottom: '1px solid #ddd' }}>
-        <TabLink to={`/jobs/${jobId}`}>Overview</TabLink>
-        <TabLink to={`/jobs/${jobId}/crew`}>Crew</TabLink>
-        <TabLink to={`/jobs/${jobId}/files`}>Files</TabLink>
-        <TabLink to={`/jobs/${jobId}/notes`}>Notes</TabLink>
-      </div>
-
-      {error ? <pre style={{ color: 'crimson' }}>{error}</pre> : null}
-
-      <div style={{ paddingTop: 12 }}>
-        <Outlet />
-      </div>
-
-      <div style={{ marginTop: 24 }}>
+      <SectionCard title="Activity" description="Recent changes and actions" className="rounded-2xl">
         <ActivityLog jobId={jobId} />
-      </div>
+      </SectionCard>
     </div>
   );
 }
 
-function TabLink(props: { to: string; children: React.ReactNode }) {
-  return (
-    <NavLink
-      to={props.to}
-      end
-      style={({ isActive }) => ({
-        padding: '8px 0',
-        textDecoration: 'none',
-        borderBottom: isActive ? '2px solid #111' : '2px solid transparent',
-      })}
-    >
-      {props.children}
-    </NavLink>
-  );
+function tabValueFromPath(pathname: string, jobId: string) {
+  const base = `/jobs/${jobId}`;
+  if (pathname === base) return 'overview';
+  if (pathname.startsWith(`${base}/crew`)) return 'crew';
+  if (pathname.startsWith(`${base}/files`)) return 'files';
+  if (pathname.startsWith(`${base}/notes`)) return 'notes';
+  return 'overview';
 }
 

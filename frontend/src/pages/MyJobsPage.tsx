@@ -2,8 +2,15 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { apiFetch } from '../api/client';
-import { EmptyState } from '../components/ui/EmptyState';
-import { LoadingState } from '../components/ui/LoadingState';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DataTableToolbar } from '@/components/ui-patterns/DataTableToolbar';
+import { EmptyState } from '@/components/ui-patterns/EmptyState';
+import { PageHeader } from '@/components/ui-patterns/PageHeader';
+import { TableSkeleton } from '@/components/ui-patterns/LoadingSkeletons';
+import { Plus, SearchX } from 'lucide-react';
 
 type Job = {
   jobId: string;
@@ -42,29 +49,82 @@ export function MyJobsPage() {
   }, [q]);
 
   return (
-    <div>
-      <h2>My Jobs</h2>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
-        <input
-          placeholder="Search by name or reference"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="My Jobs"
+        subtitle="Jobs assigned to you. Track status, access files, and manage notes."
+        actions={
+          <Button asChild>
+            <Link to="/jobs/create">
+              <Plus className="mr-2 h-4 w-4" />
+              New Job
+            </Link>
+          </Button>
+        }
+      />
 
-      {loading ? <LoadingState /> : null}
-      {error ? <pre style={{ color: 'crimson' }}>{error}</pre> : null}
+      <Card className="rounded-2xl shadow-sm">
+        <div className="space-y-4 p-6">
+          <DataTableToolbar
+            searchValue={q}
+            onSearchChange={setQ}
+            searchPlaceholder="Search by name or reference"
+          />
 
-      {!loading && !error && jobs.length === 0 ? (
-        <EmptyState title="No jobs" description="No jobs matched your search." />
-      ) : null}
-      <ul style={{ paddingLeft: 16 }}>
-        {jobs.map((j) => (
-          <li key={j.jobId}>
-            <Link to={`/jobs/${j.jobId}`}>{j.reference}</Link> — {j.name} ({j.status})
-          </li>
-        ))}
-      </ul>
+          {error ? (
+            <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+              {error}
+            </div>
+          ) : null}
+
+          {loading ? <TableSkeleton /> : null}
+
+          {!loading && !error && jobs.length === 0 ? (
+            <EmptyState
+              icon={<SearchX className="h-6 w-6" />}
+              title="No jobs found"
+              description={q.trim() ? 'No jobs matched your search.' : 'You have no jobs assigned yet.'}
+              action={
+                q.trim()
+                  ? {
+                      label: 'Clear search',
+                      onClick: () => setQ(''),
+                    }
+                  : undefined
+              }
+            />
+          ) : null}
+
+          {!loading && !error && jobs.length > 0 ? (
+            <div className="overflow-x-auto rounded-2xl border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[140px]">Ref</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="w-[140px]">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {jobs.map((j) => (
+                    <TableRow key={j.jobId} className="hover:bg-muted/40">
+                      <TableCell className="font-medium">
+                        <Link className="underline-offset-4 hover:underline" to={`/jobs/${j.jobId}`}>
+                          {j.reference}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-sm">{j.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{j.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : null}
+        </div>
+      </Card>
     </div>
   );
 }

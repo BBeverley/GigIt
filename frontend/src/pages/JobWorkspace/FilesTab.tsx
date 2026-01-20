@@ -4,6 +4,22 @@ import { useParams } from 'react-router-dom';
 import { apiFetch } from '../../api/client';
 import { FileUploadDialog } from '../../components/files/FileUploadDialog';
 
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DataTableToolbar } from '@/components/ui-patterns/DataTableToolbar';
+import { EmptyState } from '@/components/ui-patterns/EmptyState';
+import { SectionCard } from '@/components/ui-patterns/SectionCard';
+import { TableSkeleton } from '@/components/ui-patterns/LoadingSkeletons';
+import { Button } from '@/components/ui/button';
+import { Download, FileText } from 'lucide-react';
+
 type FileItem = {
   fileId: string;
   area: 'Shared' | 'Internal';
@@ -20,6 +36,7 @@ export function FilesTab() {
   const [category, setCategory] = useState('');
   const [files, setFiles] = useState<FileItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const query = useMemo(() => {
     const p = new URLSearchParams();
@@ -30,6 +47,7 @@ export function FilesTab() {
 
   async function refresh() {
     if (!jobId) return;
+    setLoading(true);
     setError(null);
     try {
       const res = await apiFetch(`/api/v1/jobs/${jobId}/files${query}`);
@@ -37,6 +55,8 @@ export function FilesTab() {
       setFiles(json.files ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -48,43 +68,93 @@ export function FilesTab() {
   if (!jobId) return <p>Missing jobId</p>;
 
   return (
-    <div>
-      <h3>Files</h3>
-      {error ? <pre style={{ color: 'crimson' }}>{error}</pre> : null}
+    <div className="space-y-6">
+      <SectionCard title="Files" description="Shared and internal documents for this job">
+        {error ? (
+          <div className="mb-4 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+            {error}
+          </div>
+        ) : null}
 
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
-        <select value={area} onChange={(e) => setArea(e.target.value as 'Shared' | 'Internal')}>
-          <option value="Shared">Shared</option>
-          <option value="Internal">Internal</option>
-        </select>
-        <input
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          placeholder="Category filter"
-        />
-        <FileUploadDialog jobId={jobId} area={area} onUploaded={() => void refresh()} />
-      </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <DataTableToolbar
+            searchValue={category}
+            onSearchChange={setCategory}
+            searchPlaceholder="Filter by category"
+            filters={
+              <Select value={area} onValueChange={(v) => setArea(v as 'Shared' | 'Internal')}>
+                <SelectTrigger className="h-9 w-[160px]">
+                  <SelectValue placeholder="Area" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Shared">Shared</SelectItem>
+                  <SelectItem value="Internal">Internal</SelectItem>
+                </SelectContent>
+              </Select>
+            }
+          />
 
-      <ul style={{ paddingLeft: 16 }}>
-        {files.map((f) => (
-          <li key={f.fileId}>
-            <button
-              onClick={async () => {
-                const res = await apiFetch(`/api/v1/jobs/${jobId}/files/${f.fileId}/download-url`);
-                const json = await res.json();
-                window.open(json.download.url, '_blank');
-              }}
-            >
-              Download
-            </button>{' '}
-            {f.originalFileName} ({f.area}/{f.category})
-          </li>
-        ))}
-      </ul>
+          <FileUploadDialog jobId={jobId} area={area} onUploaded={() => void refresh()} />
+        </div>
 
-      <p style={{ color: '#666' }}>
-        Delete + role-based UI gating are implemented in Phase 6.
-      </p>
+        {loading ? <TableSkeleton rows={5} /> : null}
+
+        {!loading && !error && files.length === 0 ? (
+          <EmptyState
+            icon={<FileText className="h-6 w-6" />}
+            title="No files"
+            description="Upload a file to share with the crew, or store internal docs."
+          />
+        ) : null}
+
+        {!loading && !error && files.length > 0 ? (
+          <div className="overflow-x-auto rounded-2xl border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>File</TableHead>
+                  <TableHead className="w-[160px]">Category</TableHead>
+                  <TableHead className="hidden w-[160px] md:table-cell">Area</TableHead>
+                  <TableHead className="hidden w-[200px] md:table-cell">Uploaded</TableHead>
+                  <TableHead className="w-[120px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {files.map((f) => (
+                  <TableRow key={f.fileId} className="hover:bg-muted/40">
+                    <TableCell className="font-medium">{f.originalFileName}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{f.category}</Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <Badge variant="outline">{f.area}</Badge>
+                    </TableCell>
+                    <TableCell className="hidden text-sm text-muted-foreground md:table-cell">{f.uploadedAt}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={async () => {
+                          const res = await apiFetch(`/api/v1/jobs/${jobId}/files/${f.fileId}/download-url`);
+                          const json = await res.json();
+                          window.open(json.download.url, '_blank');
+                        }}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Download
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : null}
+
+        <p className="mt-3 text-xs text-muted-foreground">
+          Delete + role-based UI gating are implemented in Phase 6.
+        </p>
+      </SectionCard>
     </div>
   );
 }
